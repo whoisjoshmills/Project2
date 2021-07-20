@@ -1,0 +1,645 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "95c8f8c5",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Dependencies\n",
+    "from bs4 import BeautifulSoup\n",
+    "from splinter import Browser\n",
+    "import pandas as pd\n",
+    "import requests\n",
+    "import pymongo\n",
+    "import time"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "id": "36321f24",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\n",
+      "\n",
+      "====== WebDriver manager ======\n",
+      "Current google-chrome version is 91.0.4472\n",
+      "Get LATEST driver version for 91.0.4472\n",
+      "There is no [mac64] chromedriver for browser 91.0.4472 in cache\n",
+      "Get LATEST driver version for 91.0.4472\n",
+      "Trying to download new driver from https://chromedriver.storage.googleapis.com/91.0.4472.101/chromedriver_mac64.zip\n",
+      "Driver has been saved in cache [/Users/jessicadoanes/.wdm/drivers/chromedriver/mac64/91.0.4472.101]\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Google\n"
+     ]
+    }
+   ],
+   "source": [
+    "from webdriver_manager.chrome import ChromeDriverManager\n",
+    "from selenium import webdriver \n",
+    "driver = webdriver.Chrome(executable_path=ChromeDriverManager().install())\n",
+    "driver.get(\"http://www.google.com/\") \n",
+    "print (driver.title)\n",
+    "driver.quit() "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "id": "5c7b47e0",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "chromedriver not found\r\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Show path \n",
+    "\n",
+    "!which chromedriver"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "id": "f56a478b",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\n",
+      "\n",
+      "====== WebDriver manager ======\n",
+      "Current google-chrome version is 91.0.4472\n",
+      "Get LATEST driver version for 91.0.4472\n",
+      "Driver [/Users/jessicadoanes/.wdm/drivers/chromedriver/mac64/91.0.4472.101/chromedriver] found in cache\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Setup splinter\n",
+    "executable_path = {'executable_path': ChromeDriverManager().install()}\n",
+    "browser = Browser('chrome', **executable_path, headless=False)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "id": "9f006e1a",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# URL of page to be scraped\n",
+    "url = 'https://redplanetscience.com/#'\n",
+    "browser.visit(url)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "8e01ab86",
+   "metadata": {},
+   "source": [
+    "# Step 1: Scraping"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e5f04bbf",
+   "metadata": {},
+   "source": [
+    "### NASA Mars News"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "id": "ed11b7e5",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# HTML Object \n",
+    "html_url = browser.html"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "id": "6442bdec",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Create BeautifulSoup object; parse with 'lxml'\n",
+    "soup = BeautifulSoup(html_url, 'html.parser')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "id": "32cadf3e",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Extract lastest News title text \n",
+    "news_title = soup.find('div', class_='content_title').text"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "id": "cd6d6ee0",
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [],
+   "source": [
+    "# Extract lastest News paragraph text \n",
+    "lastest_story = soup.find('div', class_='article_teaser_body').text"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 26,
+   "id": "8f604558",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Sensors on Mars 2020 Spacecraft Answer Long-Distance Call From Earth\n",
+      "---------------------------------------------------------\n",
+      "Instruments tailored to collect data during the descent of NASA's next rover through the Red Planet's atmosphere have been checked in flight.\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Display scrapped news \n",
+    "print(news_title)\n",
+    "print(\"---------------------------------------------------------\")\n",
+    "print(lastest_story)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0d412dfa",
+   "metadata": {},
+   "source": [
+    "### JPL Mars Space Images - Featured Image"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 27,
+   "id": "8a5f8971",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Visit the url for the Featured Space Image site\n",
+    "jpl_images = 'https://spaceimages-mars.com' \n",
+    "browser.visit(jpl_images)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 29,
+   "id": "379dafaa",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# HTML Object\n",
+    "html_image = browser.html\n",
+    "image_soup = BeautifulSoup(html_image, \"html.parser\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 48,
+   "id": "9e23879c",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Extract featured image from JPL Mars Space \n",
+    "featured_image = image_soup.find('img', class_='headerimage fade-in')[\"src\"]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 49,
+   "id": "b2cd63b0",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Create f-string to print full url for image\n",
+    "featured_image_url = f\"https://spaceimages-mars.com/{featured_image}\""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 50,
+   "id": "f14598f7",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "JPL Mars Space Featured Image\n",
+      "---------------------------------------------------------\n",
+      "https://spaceimages-mars.com/image/featured/mars2.jpg\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Display url of featured image \n",
+    "print(\"JPL Mars Space Featured Image\")\n",
+    "print(\"---------------------------------------------------------\")\n",
+    "print(featured_image_url)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e947ed2e",
+   "metadata": {},
+   "source": [
+    "### Mars Facts"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 81,
+   "id": "1d71d275",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Visit the Mars Facts webpage\n",
+    "mf_url = 'https://galaxyfacts-mars.com'\n",
+    "browser.visit(mf_url)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 82,
+   "id": "7b8c6d71",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "mf_html = browser.html\n",
+    "soup = BeautifulSoup(html_image, \"html.parser\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 83,
+   "id": "4ed5ebd3",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Use Pandas to scrape the table containing facts about the planet including Diameter, Mass, etc\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 84,
+   "id": "3f41c3eb",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "[                         0                1                2\n",
+       " 0  Mars - Earth Comparison             Mars            Earth\n",
+       " 1                Diameter:         6,779 km        12,742 km\n",
+       " 2                    Mass:  6.39 × 10^23 kg  5.97 × 10^24 kg\n",
+       " 3                   Moons:                2                1\n",
+       " 4       Distance from Sun:   227,943,824 km   149,598,262 km\n",
+       " 5          Length of Year:   687 Earth days      365.24 days\n",
+       " 6             Temperature:     -87 to -5 °C      -88 to 58°C,\n",
+       "                       0                              1\n",
+       " 0  Equatorial Diameter:                       6,792 km\n",
+       " 1       Polar Diameter:                       6,752 km\n",
+       " 2                 Mass:  6.39 × 10^23 kg (0.11 Earths)\n",
+       " 3                Moons:          2 ( Phobos & Deimos )\n",
+       " 4       Orbit Distance:       227,943,824 km (1.38 AU)\n",
+       " 5         Orbit Period:           687 days (1.9 years)\n",
+       " 6  Surface Temperature:                   -87 to -5 °C\n",
+       " 7         First Record:              2nd millennium BC\n",
+       " 8          Recorded By:           Egyptian astronomers]"
+      ]
+     },
+     "execution_count": 84,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "table = pd.read_html(mf_url)\n",
+    "table "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 93,
+   "id": "f6be5636",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>0</th>\n",
+       "      <th>1</th>\n",
+       "      <th>2</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>Mars - Earth Comparison</td>\n",
+       "      <td>Mars</td>\n",
+       "      <td>Earth</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>Diameter:</td>\n",
+       "      <td>6,779 km</td>\n",
+       "      <td>12,742 km</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>Mass:</td>\n",
+       "      <td>6.39 × 10^23 kg</td>\n",
+       "      <td>5.97 × 10^24 kg</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>Moons:</td>\n",
+       "      <td>2</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>Distance from Sun:</td>\n",
+       "      <td>227,943,824 km</td>\n",
+       "      <td>149,598,262 km</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>5</th>\n",
+       "      <td>Length of Year:</td>\n",
+       "      <td>687 Earth days</td>\n",
+       "      <td>365.24 days</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>6</th>\n",
+       "      <td>Temperature:</td>\n",
+       "      <td>-87 to -5 °C</td>\n",
+       "      <td>-88 to 58°C</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                         0                1                2\n",
+       "0  Mars - Earth Comparison             Mars            Earth\n",
+       "1                Diameter:         6,779 km        12,742 km\n",
+       "2                    Mass:  6.39 × 10^23 kg  5.97 × 10^24 kg\n",
+       "3                   Moons:                2                1\n",
+       "4       Distance from Sun:   227,943,824 km   149,598,262 km\n",
+       "5          Length of Year:   687 Earth days      365.24 days\n",
+       "6             Temperature:     -87 to -5 °C      -88 to 58°C"
+      ]
+     },
+     "execution_count": 93,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "mf_df = table[0]\n",
+    "mf_df"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "157b9bb0",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Use Pandas to convert the data to a HTML table string"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "37895560",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "markdown",
+   "id": "acd76a03",
+   "metadata": {},
+   "source": [
+    "### Mars Hemispheres"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 94,
+   "id": "db14781b",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Visit the Mars Facts webpage\n",
+    "mh_url = 'https://marshemispheres.com/'\n",
+    "browser.visit(mh_url)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 95,
+   "id": "b57e5e66",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# HTML Object\n",
+    "marshem_image = browser.html\n",
+    "soup = BeautifulSoup(marshem_image, \"html.parser\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "21592689",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Extract Cerberus\n",
+    "featured_image = image_soup.find('img', class_='headerimage fade-in')[\"src\"]\n",
+    "\n",
+    "# Create f-string to print full url for image\n",
+    "featured_image_url = f\"https://spaceimages-mars.com/{featured_image}\""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 96,
+   "id": "037fb837",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[<div class=\"description\">\n",
+      "<a class=\"itemLink product-item\" href=\"cerberus.html\">\n",
+      "<h3>Cerberus Hemisphere Enhanced</h3>\n",
+      "</a>\n",
+      "<span class=\"subtitle\" style=\"float:left\">image/tiff 21 MB</span><span class=\"pubDate\" style=\"float:right\"></span><br/>\n",
+      "<p>Mosaic of the Cerberus hemisphere of Mars projected into point perspective, a view similar to that which one would see from a spacecraft. This mosaic is composed of 104 Viking Orbiter images acquired…</p>\n",
+      "</div>, <div class=\"description\">\n",
+      "<a class=\"itemLink product-item\" href=\"schiaparelli.html\">\n",
+      "<h3>Schiaparelli Hemisphere Enhanced</h3>\n",
+      "</a>\n",
+      "<span class=\"subtitle\" style=\"float:left\">image/tiff 35 MB</span><span class=\"pubDate\" style=\"float:right\"></span><br/>\n",
+      "<p>Mosaic of the Schiaparelli hemisphere of Mars projected into point perspective, a view similar to that which one would see from a spacecraft. The images were acquired in 1980 during early northern…</p>\n",
+      "</div>, <div class=\"description\">\n",
+      "<a class=\"itemLink product-item\" href=\"syrtis.html\">\n",
+      "<h3>Syrtis Major Hemisphere Enhanced</h3>\n",
+      "</a>\n",
+      "<span class=\"subtitle\" style=\"float:left\">image/tiff 25 MB</span><span class=\"pubDate\" style=\"float:right\"></span><br/>\n",
+      "<p>Mosaic of the Syrtis Major hemisphere of Mars projected into point perspective, a view similar to that which one would see from a spacecraft. This mosaic is composed of about 100 red and violet…</p>\n",
+      "</div>, <div class=\"description\">\n",
+      "<a class=\"itemLink product-item\" href=\"valles.html\">\n",
+      "<h3>Valles Marineris Hemisphere Enhanced</h3>\n",
+      "</a>\n",
+      "<span class=\"subtitle\" style=\"float:left\">image/tiff 27 MB</span><span class=\"pubDate\" style=\"float:right\"></span><br/>\n",
+      "<p>Mosaic of the Valles Marineris hemisphere of Mars projected into point perspective, a view similar to that which one would see from a spacecraft. The distance is 2500 kilometers from the surface of…</p>\n",
+      "</div>]\n"
+     ]
+    }
+   ],
+   "source": [
+    "hemis = soup.find_all('div', class_='description')\n",
+    "print(hemis)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 101,
+   "id": "96877c32",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n",
+      "Cerberus Hemisphere Enhanced\n",
+      "https://marshemispheres.com/images/f5e372a36edfa389625da6d0cc25d905_cerberus_enhanced.tif_full.jpg\n",
+      "-------------------------------------------------------\n",
+      "\n",
+      "Schiaparelli Hemisphere Enhanced\n",
+      "https://marshemispheres.com/images/3778f7b43bbbc89d6e3cfabb3613ba93_schiaparelli_enhanced.tif_full.jpg\n",
+      "-------------------------------------------------------\n",
+      "\n",
+      "Syrtis Major Hemisphere Enhanced\n",
+      "https://marshemispheres.com/images/555e6403a6ddd7ba16ddb0e471cadcf7_syrtis_major_enhanced.tif_full.jpg\n",
+      "-------------------------------------------------------\n",
+      "\n",
+      "Valles Marineris Hemisphere Enhanced\n",
+      "https://marshemispheres.com/images/b3c7c6c9138f57b4756be9b9c43e3a48_valles_marineris_enhanced.tif_full.jpg\n",
+      "-------------------------------------------------------\n"
+     ]
+    }
+   ],
+   "source": [
+    "hemis_full = []\n",
+    "\n",
+    "for i in hemis:\n",
+    "    photo_title = i.find(\"h3\").text\n",
+    "    hemis_image = i.find(\"a\", class_=\"itemLink product-item\")[\"href\"]\n",
+    "    \n",
+    "    browser.visit(mh_url +hemis_image)\n",
+    "    \n",
+    "    image_html = browser.html\n",
+    "    web_info = BeautifulSoup(image_html, \"html.parser\")\n",
+    "    \n",
+    "    image_url = mh_url + web_info.find(\"img\", class_= \"wide-image\")[\"src\"]\n",
+    "    \n",
+    "    hemis_full.append({\"title\" : photo_title, \"image_url\" : image_url})\n",
+    "    \n",
+    "    \n",
+    "    print(\"\")\n",
+    "    print(photo_title)\n",
+    "    print(image_url)\n",
+    "    print(\"-------------------------------------------------------\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "62e029ff",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "PythonData",
+   "language": "python",
+   "name": "pythondata"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.5"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
