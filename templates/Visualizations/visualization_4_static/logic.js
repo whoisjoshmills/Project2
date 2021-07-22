@@ -21,9 +21,9 @@ var dataStr = JSON.stringify("data.js")
 // var data = JSON.parse(dataStr);
 
 // Crash data
-// var data = "data.js";
+// var data = dataStr;
 
-var mark = L.marker(
+ var mark = L.marker(
   L.latLng(
     parseFloat(data["latitude"]),
     parseFloat(data["long"])
@@ -31,18 +31,18 @@ var mark = L.marker(
 );
 
 
-// Loop through the cities array and create one marker for each city object
-for (var i = 0; i < data.length; i++) {
+// Loop through the crashes array and create one marker for each crash
+for (var i = 0; i < dataStr.length; i++) {
 
-  // Conditionals for countries points
+  // Conditionals for crash points
   var color = "";
-  if (data[i].fatalities >= 100) {
+  if (dataStr[i].fatalities >= 100) {
     color = "indigo";
   }
-  else if (data[i].fatalities <= 99 && data[i].fatalities >= 50) {
+  else if (dataStr[i].fatalities <= 99 && dataStr[i].fatalities >= 50) {
     color = "orangered";
   }
-  else if (data[i].fatalities <= 49 && data[i].fatalities >= 10) {
+  else if (dataStr[i].fatalities <= 49 && dataStr[i].fatalities >= 10) {
     color = "palegreen";
   }
   else {
@@ -51,11 +51,11 @@ for (var i = 0; i < data.length; i++) {
 
 
   // Add circles to map
-  L.circleMarker(data[i].specific, {
+  L.circleMarker(dataStr[i].mark, {
     fillOpacity: 0.75,
     color: color,
     fillColor: color,
     // Adjust radius
-    radius: data[i].fatalities 
-  }).bindPopup("<h1>" + data[i].location + "</h1> <hr> <h3>Fatalities: " + data[i].fatalities + "</h3>").addTo(myMap);
+    radius: dataStr[i].fatalities 
+  }).bindPopup("<h1>" + dataStr[i].location + "</h1> <hr> <h3>Fatalities: " + dataStr[i].fatalities + "</h3>").addTo(myMap);
 }
