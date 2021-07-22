@@ -1,4 +1,6 @@
 // Create a map object
+console.log("Hello");
+
 var myMap = L.map("map", {
   center: [15.5994, -28.6731],
   zoom: 3
@@ -13,9 +15,10 @@ L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
   accessToken: API_KEY
 }).addTo(myMap);
 
-var dataStr = JSON.stringify("data.js");
+var dataStr = JSON.stringify("data.js")
+    console.log(data);
 
-var data = JSON.parse(dataStr);
+// var data = JSON.parse(dataStr);
 
 // Crash data
 // var data = "data.js";
