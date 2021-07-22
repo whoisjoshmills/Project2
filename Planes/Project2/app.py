@@ -49,5 +49,22 @@ def sql_data():
   sql_plane = df.to_dict('records')
   return jsonify(sql_plane)
 
+@app.route('/showLineChart')
+def line():
+    count = 500
+    xScale = np.linspace(0, 100, count)
+    yScale = np.random.randn(count)
+ 
+    # Create a trace
+    trace = go.Scatter(
+        x = xScale,
+        y = yScale
+    )
+ 
+    data = [trace]
+    graphJSON = json.dumps(data, cls=plotly.utils.PlotlyJSONEncoder)
+    return render_template('Visualization_JD.html',
+                               graphJSON=graphJSON)
+
 if __name__ == '__main__':
   app.run(debug=True)

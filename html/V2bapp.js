@@ -25,7 +25,7 @@ var chartGroup = svg.append("g")
   .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
 // Load data from forcepoints.csv
-d3.csv("../data/Plane_crash.csv").then(function(crashData) {
+d3.csv("../resources/take_3.csv").then(function(crashData) {
 
   // Print the forceData
   console.log(crashData);
@@ -33,13 +33,13 @@ d3.csv("../data/Plane_crash.csv").then(function(crashData) {
 // Configure a parseTime function which will return a new Date object from a string
 var parseTime = d3.timeParse("%m/%d/%Y");
 
-  // Format the date and cast the force value to a number
-  //Without this code Array reads properly. Ticks not appearing on xaxis
-//   crashData.forEach(function(data) {
-//     data.Date = parseTime(data.Date);
-//     data.Date = +data.Date;
-//     data.Fatalities = +data.Fatalities;
-//   });
+//Format the date and cast the force value to a number
+//Without this code Array reads properly. Ticks not appearing on xaxis
+  crashData.forEach(function(data) {
+    data.Date = parseTime(data.Date);
+    data.Date = +data.Date;
+    data.Fatalities = +data.Fatalities;
+  });
 
   // Configure a time scale
   // d3.extent returns the an array containing the min and max values for the property specified
@@ -54,7 +54,11 @@ var parseTime = d3.timeParse("%m/%d/%Y");
 
   // Create two new functions passing the scales in as arguments
   // These will be used to create the chart's axes
-  var bottomAxis = d3.axisBottom(xTimeScale).tickFormat(d3.timeFormat("%m/%d/%Y"));
+  var bottomAxis = d3.axisBottom(xTimeScale).tickFormat(d3.timeFormat("%Y"));
+  // group by year 
+  
+
+
   var leftAxis = d3.axisLeft(yLinearScale);
 
   // Configure a line function which will plot the x and y coordinates using our scales
