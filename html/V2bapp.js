@@ -24,8 +24,9 @@ var svg = d3.select("body")
 var chartGroup = svg.append("g")
   .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-// Load data from forcepoints.csv
-d3.csv("../resources/take_3.csv").then(function(crashData) {
+// Load data from csv
+d3.csv("../resources/take_3.csv").then(function(data) {
+var crashData=data  
 
   // Print the forceData
   console.log(crashData);
@@ -54,10 +55,9 @@ var parseTime = d3.timeParse("%m/%d/%Y");
 
   // Create two new functions passing the scales in as arguments
   // These will be used to create the chart's axes
-  var bottomAxis = d3.axisBottom(xTimeScale).tickFormat(d3.timeFormat("%Y"));
+  var bottomAxis = d3.axisBottom(xTimeScale)
+  //.tickFormat(d3.timeFormat("%Y"));
   // group by year 
-  
-
 
   var leftAxis = d3.axisLeft(yLinearScale);
 
@@ -70,12 +70,15 @@ var parseTime = d3.timeParse("%m/%d/%Y");
   chartGroup.append("path")
     // The drawLine function returns the instructions for creating the line for forceData
     .attr("d", drawLine(crashData))
+    .attr("fill", "none")
+    .attr ("stroke", "steelblue")
     .classed("line", true);
 
   // Append an SVG group element to the chartGroup, create the left axis inside of it
   chartGroup.append("g")
     .classed("axis", true)
     .call(leftAxis);
+
 
   // Append an SVG group element to the chartGroup, create the bottom axis inside of it
   // Translate the bottom axis to the bottom of the page
